@@ -1,0 +1,5 @@
+101|Lalit Kumar|88.50
+102|Ravi Shankar|76.00
+103|Priya Sharma|92.75
+104|Anil Verma|65.30
+105|Sneha Patil|83.40
