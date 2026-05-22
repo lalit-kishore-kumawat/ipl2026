@@ -1,153 +1,117 @@
 #include <stdio.h>
 #include <string.h>
 
-// ═══════════════════════════════════════════════════════
-// FUNCTION 1: Print all bits of an integer
-// ═══════════════════════════════════════════════════════
-void printBits(int n) {
-    printf("Bits of %d : ", n);
-    for (int i = (sizeof(int) * 8) - 1; i >= 0; i--) {
+// ─── 1. print bits of an integer ───────────────────────────────────────────
+
+void print_bits_int(int n) {
+    for (int i = 31; i >= 0; i--) {
         printf("%d", (n >> i) & 1);
-        if (i % 8 == 0) printf(" ");   // space every byte
+        if (i % 8 == 0) printf(" ");
     }
     printf("\n");
 }
 
-// ═══════════════════════════════════════════════════════
-// FUNCTION 2: Count number of 1-bits (set bits)
-// ═══════════════════════════════════════════════════════
-int countOneBits(int n) {
+// ─── 2. count number of 1 bits ─────────────────────────────────────────────
+
+int count_ones(int n) {
     int count = 0;
-    // Use unsigned to handle negative numbers correctly
-    unsigned int un = (unsigned int)n;
-    while (un != 0) {
-        count += (un & 1);
-        un >>= 1;
+    // brian kernighan's trick - clears lowest set bit each time
+    unsigned int un = (unsigned int)n; // use unsigned so right shift is safe
+    while (un) {
+        un = un & (un - 1);
+        count++;
     }
     return count;
 }
 
-// ═══════════════════════════════════════════════════════
-// FUNCTION 3: Check Little Endian or Big Endian
-// ═══════════════════════════════════════════════════════
-void checkEndianness() {
-    unsigned int x = 1;
-    char *c = (char *)&x;
+// ─── 3. check endianness ───────────────────────────────────────────────────
 
-    printf("\n─── ENDIANNESS ───────────────────────────────\n");
-    if (*c == 1)
-        printf("This system is : LITTLE ENDIAN\n");
+void check_endian() {
+    int x = 1;
+    char *ptr = (char*)&x;
+    if (*ptr == 1)
+        printf("this machine is LITTLE ENDIAN (least significant byte first)\n");
     else
-        printf("This system is : BIG ENDIAN\n");
+        printf("this machine is BIG ENDIAN (most significant byte first)\n");
 
-    // Show memory layout of 0x12345678
+    // show how 0x12345678 sits in memory
     unsigned int val = 0x12345678;
-    unsigned char *p = (unsigned char *)&val;
-    printf("Memory layout of 0x12345678 (byte by byte):\n");
-    for (int i = 0; i < sizeof(val); i++) {
-        printf("  Address[%d] = 0x%02X\n", i, p[i]);
-    }
-    printf("Little Endian stores LSB first (0x78 at lowest address)\n");
-    printf("Big    Endian stores MSB first (0x12 at lowest address)\n");
+    unsigned char *bytes = (unsigned char*)&val;
+    printf("memory layout of 0x12345678 → ");
+    for (int i = 0; i < 4; i++)
+        printf("[0x%02X] ", bytes[i]);
+    printf("\n");
 }
 
-// ═══════════════════════════════════════════════════════
-// FUNCTION 4: Bits in a NEGATIVE integer (2's complement)
-// ═══════════════════════════════════════════════════════
-void negativeBits() {
-    printf("\n─── NEGATIVE INTEGER BITS ────────────────────\n");
+// ─── 4. print bits of a float ──────────────────────────────────────────────
 
-    int pos =  5;
-    int neg = -5;
+void print_bits_float(float f) {
+    unsigned int temp;
+    memcpy(&temp, &f, sizeof(f)); // safe way to reinterpret float as int
 
-    printBits(pos);
-    printBits(neg);
-
-    printf("\nHow -5 is stored (2's complement):\n");
-    printf("  Step 1: Binary of  5  = 00000000 00000000 00000000 00000101\n");
-    printf("  Step 2: Flip all bits  = 11111111 11111111 11111111 11111010\n");
-    printf("  Step 3: Add 1         = 11111111 11111111 11111111 11111011\n");
-    printf("  MSB (leftmost) = 1 means NEGATIVE\n");
-    printf("  MSB (leftmost) = 0 means POSITIVE\n");
-
-    printf("\n  +5  has %d one-bits\n", countOneBits(pos));
-    printf("  -5  has %d one-bits\n", countOneBits(neg));
-}
-
-// ═══════════════════════════════════════════════════════
-// FUNCTION 5: Print bits of a FLOAT (IEEE 754 format)
-// ═══════════════════════════════════════════════════════
-void printFloatBits(float f) {
-    unsigned int bits;
-    memcpy(&bits, &f, sizeof(bits));   // copy float bits to unsigned int
-
-    printf("Float value     : %f\n", f);
-    printf("Bits (IEEE 754) : ");
-
+    printf("sign | exponent | mantissa\n");
+    printf("  ");
     for (int i = 31; i >= 0; i--) {
-        printf("%d", (bits >> i) & 1);
-        if (i == 31) printf(" | ");   // sign bit separator
-        if (i == 23) printf(" | ");   // exponent separator
-        if (i % 8 == 0 && i != 0 && i != 31 && i != 23)
-            printf(" ");
+        printf("%d", (temp >> i) & 1);
+        if (i == 31) printf("  |  ");       // after sign bit
+        else if (i == 23) printf("  |  ");  // after exponent
+        else if (i > 0 && (i) % 4 == 0 && i != 24) printf(" "); // group mantissa
     }
     printf("\n");
-
-    // Extract IEEE 754 fields
-    unsigned int sign     = (bits >> 31) & 0x1;
-    unsigned int exponent = (bits >> 23) & 0xFF;
-    unsigned int mantissa =  bits & 0x7FFFFF;
-
-    printf("Sign bit        : %u  (%s)\n", sign, sign ? "Negative" : "Positive");
-    printf("Exponent (8bit) : %u  (biased, actual = %d)\n", exponent, (int)exponent - 127);
-    printf("Mantissa (23bit): %u\n\n", mantissa);
 }
 
-// ═══════════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════════
+// ─── main ──────────────────────────────────────────────────────────────────
+
 int main() {
 
-    // ── 1. Print bits of a positive integer ──────────
-    printf("═══ 1. PRINT BITS OF INTEGER ═════════════════\n");
-    printBits(0);
-    printBits(5);
-    printBits(255);
-    printBits(1024);
+    // --- integer bits ---
+    printf("======= PRINT BITS (integer) =======\n");
+    int a = 5;
+    printf("%d  → ", a);
+    print_bits_int(a);
 
-    // ── 2. Count 1-bits ───────────────────────────────
-    printf("\n═══ 2. COUNT 1-BITS ══════════════════════════\n");
-    int nums[] = {0, 5, 7, 255, -1, -5};
-    int size   = sizeof(nums) / sizeof(nums[0]);
-    for (int i = 0; i < size; i++) {
-        printf("  %6d  →  %d one-bits\n", nums[i], countOneBits(nums[i]));
-    }
+    int b = 100;
+    printf("%d → ", b);
+    print_bits_int(b);
 
-    // ── 3. Endianness ─────────────────────────────────
-    checkEndianness();
+    // --- count 1 bits ---
+    printf("\n======= COUNT 1-BITS =======\n");
+    printf("5   → %d one-bits\n", count_ones(5));
+    printf("100 → %d one-bits\n", count_ones(100));
+    printf("255 → %d one-bits\n", count_ones(255)); // should be 8
 
-    // ── 4. Negative integer bits ──────────────────────
-    printf("\n═══ 4. NEGATIVE INTEGER BITS ═════════════════\n");
-    negativeBits();
+    // --- endianness ---
+    printf("\n======= ENDIANNESS =======\n");
+    check_endian();
 
-    // ── 5. Float bits (positive) ──────────────────────
-    printf("\n═══ 5. BITS IN A FLOAT (IEEE 754) ════════════\n");
-    printf("Format: [Sign 1bit] | [Exponent 8bits] | [Mantissa 23bits]\n\n");
-    printFloatBits(0.0f);
-    printFloatBits(1.0f);
-    printFloatBits(5.75f);
+    // --- negative integer bits (two's complement) ---
+    printf("\n======= NEGATIVE INTEGER BITS (two's complement) =======\n");
+    int pos = 5;
+    int neg = -5;
+    printf(" 5  → ");
+    print_bits_int(pos);
+    printf("-5  → ");
+    print_bits_int(neg);
+    printf("notice: to get -5, flip all bits of 5 then add 1\n");
+    printf("MSB (leftmost bit) is 1 which means it's negative\n");
+    printf("count of 1-bits in -5: %d\n", count_ones(neg));
 
-    // ── 6. Negative float bits ────────────────────────
-    printf("═══ 6. BITS IN A NEGATIVE FLOAT ══════════════\n");
-    printf("Format: [Sign 1bit] | [Exponent 8bits] | [Mantissa 23bits]\n\n");
-    printFloatBits(-1.0f);
-    printFloatBits(-5.75f);
+    // --- float bits ---
+    printf("\n======= FLOAT BITS (IEEE 754) =======\n");
+    float f1 = 5.0f;
+    printf("5.0 bits:\n");
+    print_bits_float(f1);
+    printf("structure: [1 sign bit] [8 exponent bits] [23 mantissa bits]\n");
+    printf("5.0 = 1.01 x 2^2  →  exponent stored = 2+127 = 129 = 10000001\n");
 
-    printf("\nKey observations:\n");
-    printf("  Positive float : Sign bit = 0\n");
-    printf("  Negative float : Sign bit = 1\n");
-    printf("  Mantissa and Exponent are SAME for +5.75 and -5.75\n");
-    printf("  Only the sign bit flips!\n");
+    // --- negative float bits ---
+    printf("\n======= NEGATIVE FLOAT BITS =======\n");
+    float f2 = -5.0f;
+    printf(" 5.0 bits:\n  ");
+    print_bits_float(f1);
+    printf("-5.0 bits:\n  ");
+    print_bits_float(f2);
+    printf("only the sign bit flips — floats do NOT use two's complement\n");
 
     return 0;
 }
