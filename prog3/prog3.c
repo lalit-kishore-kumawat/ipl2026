@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// ─── 1. print bits of an integer ───────────────────────────────────────────
+//  print bits of an integer 
 
 void print_bits_int(int n) {
     for (int i = 31; i >= 0; i--) {
@@ -11,7 +11,7 @@ void print_bits_int(int n) {
     printf("\n");
 }
 
-// ─── 2. count number of 1 bits ─────────────────────────────────────────────
+//  count number of 1 bits 
 
 int count_ones(int n) {
     int count = 0;
@@ -24,8 +24,7 @@ int count_ones(int n) {
     return count;
 }
 
-// ─── 3. check endianness ───────────────────────────────────────────────────
-
+// check endianness 
 void check_endian() {
     int x = 1;
     char *ptr = (char*)&x;
@@ -43,7 +42,7 @@ void check_endian() {
     printf("\n");
 }
 
-// ─── 4. print bits of a float ──────────────────────────────────────────────
+//  print bits of a float 
 
 void print_bits_float(float f) {
     unsigned int temp;
@@ -60,7 +59,7 @@ void print_bits_float(float f) {
     printf("\n");
 }
 
-// ─── main ──────────────────────────────────────────────────────────────────
+// main 
 
 int main() {
 
